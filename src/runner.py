@@ -19,10 +19,9 @@ size = width, height = 600, 400
 screen = pygame.display.set_mode(size)
 
 # Fonts
-OPEN_SANS = "assets/fonts/OpenSans-Regular.ttf"
-smallFont = pygame.font.Font(OPEN_SANS, 20)
-mediumFont = pygame.font.Font(OPEN_SANS, 28)
-largeFont = pygame.font.Font(OPEN_SANS, 40)
+smallFont = pygame.font.SysFont("Arial", 20)
+mediumFont = pygame.font.SysFont("Arial", 28)
+largeFont = pygame.font.SysFont("Arial", 40)
 
 # Compute board size
 BOARD_PADDING = 20
@@ -30,12 +29,6 @@ board_width = ((2 / 3) * width) - (BOARD_PADDING * 2)
 board_height = height - (BOARD_PADDING * 2)
 cell_size = int(min(board_width / WIDTH, board_height / HEIGHT))
 board_origin = (BOARD_PADDING, BOARD_PADDING)
-
-# Add images
-flag = pygame.image.load("assets/images/flag.png")
-flag = pygame.transform.scale(flag, (cell_size, cell_size))
-mine = pygame.image.load("assets/images/mine.png")
-mine = pygame.transform.scale(mine, (cell_size, cell_size))
 
 # Create game and AI agent
 game = Minesweeper(height=HEIGHT, width=WIDTH, mines=MINES)
@@ -115,9 +108,25 @@ while True:
 
             # Add a mine, flag, or number if needed
             if game.is_mine((i, j)) and lost:
-                screen.blit(mine, rect)
+                center = rect.center
+                radius = max(5, cell_size // 6)
+                for angle in range(0, 360, 45):
+                    start = (center[0] + int(radius * 1.3 * pygame.math.Vector2(1, 0).rotate(angle).x),
+                             center[1] + int(radius * 1.3 * pygame.math.Vector2(1, 0).rotate(angle).y))
+                    end = (center[0] + int(radius * 2 * pygame.math.Vector2(1, 0).rotate(angle).x),
+                           center[1] + int(radius * 2 * pygame.math.Vector2(1, 0).rotate(angle).y))
+                    pygame.draw.line(screen, BLACK, start, end, 2)
+                pygame.draw.circle(screen, BLACK, center, radius)
             elif (i, j) in flags:
-                screen.blit(flag, rect)
+                pole_x = rect.centerx - cell_size // 6
+                pygame.draw.line(screen, BLACK,
+                                 (pole_x, rect.centery - cell_size // 3),
+                                 (pole_x, rect.centery + cell_size // 3), 3)
+                pygame.draw.polygon(screen, (200, 30, 30), [
+                    (pole_x, rect.centery - cell_size // 3),
+                    (pole_x + cell_size // 3, rect.centery - cell_size // 6),
+                    (pole_x, rect.centery)
+                ])
             elif (i, j) in revealed:
                 neighbors = smallFont.render(
                     str(game.nearby_mines((i, j))),
